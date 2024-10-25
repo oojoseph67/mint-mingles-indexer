@@ -1,5 +1,5 @@
-module.exports = class Data1729865100155 {
-    name = 'Data1729865100155'
+module.exports = class Data1729870609590 {
+    name = 'Data1729870609590'
 
     async up(db) {
         await db.query(`CREATE TABLE "new_listing" ("id" character varying NOT NULL, "listing_creator" text NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric, "end_timestamp" numeric NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, "transaction_hash" text NOT NULL, CONSTRAINT "PK_b488e12815dbd3bf227ff7221b6" PRIMARY KEY ("id"))`)
@@ -17,6 +17,9 @@ module.exports = class Data1729865100155 {
         await db.query(`CREATE INDEX "IDX_a0c67476a82748dfa9f1f7feab" ON "auction_closed" ("asset_contract") `)
         await db.query(`CREATE INDEX "IDX_7bb0cfc2e72302638d8f9c611d" ON "auction_closed" ("closer") `)
         await db.query(`CREATE TABLE "all_listing" ("id" character varying NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "listing_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, CONSTRAINT "PK_614454c94a2f72e905ca1eb87fd" PRIMARY KEY ("id"))`)
+        await db.query(`CREATE TABLE "completed_listing" ("id" character varying NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "listing_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, CONSTRAINT "PK_16f6654e683fc0918ce55e230a1" PRIMARY KEY ("id"))`)
+        await db.query(`CREATE TABLE "all_auction" ("id" character varying NOT NULL, "auction_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "minimum_bid_amount" numeric NOT NULL, "buyout_bid_amount" numeric NOT NULL, "time_buffer_in_seconds" numeric NOT NULL, "bid_buffer_bps" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "auction_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, CONSTRAINT "PK_ab94fecb5b40ddd8791d2e8c325" PRIMARY KEY ("id"))`)
+        await db.query(`CREATE TABLE "completed_auction" ("id" character varying NOT NULL, "auction_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "minimum_bid_amount" numeric NOT NULL, "buyout_bid_amount" numeric NOT NULL, "time_buffer_in_seconds" numeric NOT NULL, "bid_buffer_bps" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "auction_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, CONSTRAINT "PK_eb0bb47198fc5c1cfe67dba148d" PRIMARY KEY ("id"))`)
     }
 
     async down(db) {
@@ -35,5 +38,8 @@ module.exports = class Data1729865100155 {
         await db.query(`DROP INDEX "public"."IDX_a0c67476a82748dfa9f1f7feab"`)
         await db.query(`DROP INDEX "public"."IDX_7bb0cfc2e72302638d8f9c611d"`)
         await db.query(`DROP TABLE "all_listing"`)
+        await db.query(`DROP TABLE "completed_listing"`)
+        await db.query(`DROP TABLE "all_auction"`)
+        await db.query(`DROP TABLE "completed_auction"`)
     }
 }

@@ -2,8 +2,11 @@ import { EvmBatchProcessor } from "@subsquid/evm-processor";
 import { TypeormDatabase } from "@subsquid/typeorm-store";
 import * as marketplaceAbi from "./abi/marketplaceABI";
 import {
+  AllAuction,
   AllListing,
   AuctionClosed,
+  CompletedAuction,
+  CompletedListing,
   NewAuction,
   NewListing,
   NewSaleListing,
@@ -16,6 +19,7 @@ import {
   handleNewListing,
   handleNewSale,
   handleUpdatedListing,
+  processAllAuctions,
   processAllListings,
 } from "./handlers";
 
@@ -30,7 +34,7 @@ const processor = new EvmBatchProcessor()
   .setRpcEndpoint("https://rpc.xfi.ms/archive/4157")
   .setFinalityConfirmation(75)
   .addLog({
-    range: { from: 5743077 },
+    range: { from: 5743489 },
     address: [MARKETPLACE_CONTRACT_ADDRESS],
 
     topic0: [
@@ -52,8 +56,8 @@ const processor = new EvmBatchProcessor()
       marketplaceAbi.events.AuctionClosed.topic,
     ],
   })
-  .setBlockRange({ from: 5743077 })
-  .includeAllBlocks({ from: 5743077 })
+  .setBlockRange({ from: 5743489 })
+  .includeAllBlocks({ from: 5743489 })
   .setFields({
     log: {
       transactionHash: true,
@@ -70,8 +74,12 @@ processor.run(db, async (ctx) => {
   const newSaleListings: NewSaleListing[] = [];
   const auctionClosed: AuctionClosed[] = [];
   const allListings: AllListing[] = [];
-  let processedListingIds = new Set<string>();
+  const completedListings: CompletedListing[] = [];
+  const allAuctions: AllAuction[] = [];
+  const completedAuctions: CompletedAuction[] = [];
 
+  let processedListingIds = new Set<string>();
+  let processedAuctionIds = new Set<string>();
   for (let block of ctx.blocks) {
     console.log("Inside block loop");
     console.log("Processing block:", block.header.height);
@@ -112,18 +120,25 @@ processor.run(db, async (ctx) => {
       }
     }
 
-    const contract = new marketplaceAbi.Contract(
-      ctx,
-      block.header,
-      MARKETPLACE_CONTRACT_ADDRESS.toLowerCase()
-    );
+    // const contract = new marketplaceAbi.Contract(
+    //   ctx,
+    //   block.header,
+    //   MARKETPLACE_CONTRACT_ADDRESS.toLowerCase()
+    // );
 
-    const { newAllListings, updatedProcessedListingIds } =
-      await processAllListings(ctx, contract, processedListingIds);
+    const { newAllListings, newCompletedListings, updatedProcessedListingIds } =
+      await processAllListings(ctx, block.header, processedListingIds);
+
     allListings.push(...newAllListings);
-
-    console.log({ newAllListings, updatedProcessedListingIds });
+    completedListings.push(...newCompletedListings);
     processedListingIds = updatedProcessedListingIds;
+
+    const { newAllAuctions, newCompletedAuctions, updatedProcessedAuctionIds } =
+      await processAllAuctions(ctx, block.header, processedAuctionIds);
+
+    allAuctions.push(...newAllAuctions);
+    completedAuctions.push(...newCompletedAuctions);
+    processedAuctionIds = updatedProcessedAuctionIds;
   }
 
   // Just one insert per batch!
@@ -134,5 +149,17 @@ processor.run(db, async (ctx) => {
 
   if (allListings.length > 0) {
     await ctx.store.insert(allListings);
+  }
+
+  if (completedListings.length > 0) {
+    await ctx.store.insert(completedListings);
+  }
+
+  if (allAuctions.length > 0) {
+    await ctx.store.insert(allAuctions);
+  }
+
+  if (completedAuctions.length > 0) {
+    await ctx.store.insert(completedAuctions);
   }
 });

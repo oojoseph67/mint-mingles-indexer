@@ -1,5 +1,5 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
-import { NewAuction } from "../../model";
+import { AllAuction, NewAuction } from "../../model";
 import { Context } from "../../types";
 
 export async function handleCancelledAuction(
@@ -13,8 +13,16 @@ export async function handleCancelledAuction(
     where: { auctionId: auctionId },
   });
 
+  const auctionToRemoveAll = await ctx.store.findOne(AllAuction, {
+    where: { auctionId: auctionId },
+  });
+
   // Remove the auction if it exists
   if (auctionToRemove) {
     await ctx.store.remove(NewAuction, auctionToRemove.id);
+  }
+
+  if (auctionToRemoveAll) {
+    await ctx.store.remove(AllAuction, auctionToRemoveAll.id);
   }
 }

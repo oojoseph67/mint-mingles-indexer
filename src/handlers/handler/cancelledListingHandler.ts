@@ -1,5 +1,5 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
-import { NewListing } from "../../model";
+import { AllListing, NewListing } from "../../model";
 import { Context } from "../../types";
 
 export async function handleCancelledListing(
@@ -12,8 +12,16 @@ export async function handleCancelledListing(
     where: { listingId: listingId },
   });
 
+  const listingToRemoveAll = await ctx.store.findOne(AllListing, {
+    where: { listingId: listingId },
+  });
+
   // Remove the listing if it exists
   if (listingToRemove) {
     await ctx.store.remove(NewListing, listingToRemove.id);
+  }
+
+  if (listingToRemoveAll) {
+    await ctx.store.remove(AllListing, listingToRemoveAll.id);
   }
 }

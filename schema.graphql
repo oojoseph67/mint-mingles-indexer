@@ -72,3 +72,55 @@ type AllListing @entity {
   status: Int!
   reserved: Boolean!
 }
+
+type CompletedListing @entity {
+  id: ID!
+  listingId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  pricePerToken: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  listingCreator: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+  reserved: Boolean!
+}
+
+type AllAuction @entity {
+  id: ID!
+  auctionId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  minimumBidAmount: BigInt!
+  buyoutBidAmount: BigInt!
+  timeBufferInSeconds: BigInt!
+  bidBufferBps: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  auctionCreator: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+}
+
+type CompletedAuction @entity {
+  id: ID!
+  auctionId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  minimumBidAmount: BigInt!
+  buyoutBidAmount: BigInt!
+  timeBufferInSeconds: BigInt!
+  bidBufferBps: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  auctionCreator: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+}

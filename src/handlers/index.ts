@@ -7,3 +7,4 @@ export * from "./handler/newSaleHandler";
 export * from "./handler/auctionClosedHandler";
 
 export * from "./handler/processAllListings";
+export * from "./handler/processAllAuctions";
