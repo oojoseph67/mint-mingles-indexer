@@ -1,4 +1,6 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, BigIntColumn as BigIntColumn_, StringColumn as StringColumn_, IntColumn as IntColumn_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, BigIntColumn as BigIntColumn_, StringColumn as StringColumn_, IntColumn as IntColumn_, BooleanColumn as BooleanColumn_} from "@subsquid/typeorm-store"
+import * as marshal from "./marshal"
+import {WinningBid} from "./_winningBid"
 
 @Entity_()
 export class AllAuction {
@@ -47,6 +49,12 @@ export class AllAuction {
 
     @IntColumn_({nullable: false})
     tokenType!: number
+
+    @Column_("jsonb", {transformer: {to: obj => obj.toJSON(), from: obj => obj == null ? undefined : new WinningBid(undefined, obj)}, nullable: false})
+    winningBid!: WinningBid
+
+    @BooleanColumn_({nullable: false})
+    isAuctionExpired!: boolean
 
     @IntColumn_({nullable: false})
     status!: number

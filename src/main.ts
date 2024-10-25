@@ -11,6 +11,7 @@ import {
   CompletedListing,
   CompletedOffers,
   NewAuction,
+  NewBid,
   NewListing,
   NewOffer,
   NewSaleListing,
@@ -22,6 +23,7 @@ import {
   handleCancelledListing,
   handleCancelledOffer,
   handleNewAuction,
+  handleNewBid,
   handleNewListing,
   handleNewOffer,
   handleNewSale,
@@ -67,6 +69,8 @@ const processor = new EvmBatchProcessor()
       marketplaceAbi.events.NewOffer.topic,
       marketplaceAbi.events.AcceptedOffer.topic,
       marketplaceAbi.events.CancelledOffer.topic,
+
+      marketplaceAbi.events.NewBid.topic,
     ],
   })
   .setBlockRange({ from: 5743489 })
@@ -94,6 +98,7 @@ processor.run(db, async (ctx) => {
   const acceptedOffers: AcceptedOffers[] = [];
   const allOffers: AllOffers[] = [];
   const completedOffers: CompletedOffers[] = [];
+  const newBids: NewBid[] = [];
 
   let processedListingIds = new Set<string>();
   let processedAuctionIds = new Set<string>();
@@ -144,6 +149,9 @@ processor.run(db, async (ctx) => {
           case marketplaceAbi.events.AcceptedOffer.topic.toLowerCase():
             acceptedOffers.push(await handleAcceptedOffer(ctx, log));
             break;
+          case marketplaceAbi.events.NewBid.topic.toLowerCase():
+            newBids.push(await handleNewBid(ctx, log));
+            break;
         }
       }
     }
@@ -186,6 +194,7 @@ processor.run(db, async (ctx) => {
   await ctx.store.insert(auctionClosed);
   await ctx.store.insert(newOffers);
   await ctx.store.insert(acceptedOffers);
+  await ctx.store.insert(newBids);
 
   if (allListings.length > 0) {
     await ctx.store.insert(allListings);

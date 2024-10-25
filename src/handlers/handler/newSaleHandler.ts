@@ -1,5 +1,5 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
-import { NewListing, NewSaleListing } from "../../model";
+import { AllListing, NewListing, NewSaleListing } from "../../model";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
 
@@ -20,12 +20,24 @@ export async function handleNewSale(
   } = marketplaceAbi.events.NewSale.decode(log);
 
   // this is to remove the listing from the new-listing database after it has been sold
-  const listingToRemove = await ctx.store.findOne(NewListing, {
+  const listingToRemove = await ctx.store.find(NewListing, {
+    where: { listingId: listingId },
+  });
+
+  const listingToRemoveAll = await ctx.store.find(AllListing, {
     where: { listingId: listingId },
   });
 
   if (listingToRemove) {
-    await ctx.store.remove(NewListing, listingToRemove.id);
+    for (const listing of listingToRemove) {
+      await ctx.store.remove(NewListing, listing.id);
+    }
+  }
+
+  if (listingToRemoveAll) {
+    for (const listing of listingToRemoveAll) {
+      await ctx.store.remove(AllListing, listing.id);
+    }
   }
 
   return new NewSaleListing({

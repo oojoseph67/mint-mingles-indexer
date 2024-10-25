@@ -13,16 +13,7 @@ export async function handleCancelledOffer(
     where: { offerId: offerId },
   });
 
-  // const listingToRemoveAll = await ctx.store.findOne(AllListing, {
-  //   where: { listingId: listingId },
-  // });
-
-  // Remove the listing if it exists
   if (offerToRemove) {
     await ctx.store.remove(NewOffer, offerToRemove.id);
   }
-
-  // if (listingToRemoveAll) {
-  //   await ctx.store.remove(AllListing, listingToRemoveAll.id);
-  // }
 }

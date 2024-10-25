@@ -1,5 +1,5 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
-import { AllAuction, NewAuction } from "../../model";
+import { AllAuction, NewAuction, NewBid } from "../../model";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
 

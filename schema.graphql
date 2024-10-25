@@ -73,6 +73,26 @@ type AllListing @entity {
   reserved: Boolean!
 }
 
+type NewBid @entity {
+  id: ID!
+  auctionId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  bidder: String!
+  bidAmount: BigInt!
+  minimumBidAmount: BigInt!
+  buyoutBidAmount: BigInt!
+  timeBufferInSeconds: BigInt!
+  bidBufferBps: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  auctionCreator: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+}
+
 type CompletedListing @entity {
   id: ID!
   listingId: BigInt!
@@ -87,6 +107,12 @@ type CompletedListing @entity {
   tokenType: Int!
   status: Int!
   reserved: Boolean!
+}
+
+type WinningBid {
+  bidder: String
+  currency: String
+  bidAmount: BigInt
 }
 
 type AllAuction @entity {
@@ -104,6 +130,8 @@ type AllAuction @entity {
   assetContract: String!
   currency: String!
   tokenType: Int!
+  winningBid: WinningBid!
+  isAuctionExpired: Boolean!
   status: Int!
 }
 
@@ -122,6 +150,8 @@ type CompletedAuction @entity {
   assetContract: String!
   currency: String!
   tokenType: Int!
+  winningBid: WinningBid!
+  isAuctionExpired: Boolean!
   status: Int!
 }
 

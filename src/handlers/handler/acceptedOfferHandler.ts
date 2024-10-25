@@ -1,5 +1,5 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
-import { AcceptedOffers, NewOffer } from "../../model";
+import { AcceptedOffers, AllOffers, NewOffer } from "../../model";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
 
@@ -17,12 +17,24 @@ export async function handleAcceptedOffer(
     totalPricePaid,
   } = marketplaceAbi.events.AcceptedOffer.decode(log);
 
-  const offerToRemove = await ctx.store.findOne(NewOffer, {
-    where: { offerId: offerId },
+  const offersToRemove = await ctx.store.find(NewOffer, {
+    where: { tokenId: tokenId, assetContract: assetContract },
   });
 
-  if (offerToRemove) {
-    await ctx.store.remove(NewOffer, offerToRemove.id);
+  const offersToRemoveAll = await ctx.store.find(AllOffers, {
+    where: { tokenId: tokenId, assetContract: assetContract },
+  });
+
+  if (offersToRemove) {
+    for (const offer of offersToRemove) {
+      await ctx.store.remove(NewOffer, offer.id);
+    }
+  }
+
+  if (offersToRemoveAll) {
+    for (const offer of offersToRemoveAll) {
+      await ctx.store.remove(AllOffers, offer.id);
+    }
   }
 
   return new AcceptedOffers({

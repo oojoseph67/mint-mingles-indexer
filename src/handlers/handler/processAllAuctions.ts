@@ -1,4 +1,4 @@
-import { AllAuction, CompletedAuction } from "../../model";
+import { AllAuction, CompletedAuction, WinningBid } from "../../model";
 import { v4 as uuidv4 } from "uuid";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
@@ -37,6 +37,20 @@ export async function processAllAuctions(
     console.log(`Fetching auctions from ${startIndex} to ${endIndex}`);
 
     for (const auction of newAuctions) {
+      const winningBid = await contract.getWinningBid(auction.auctionId);
+      const isAuctionExpired = await contract.isAuctionExpired(
+        auction.auctionId
+      );
+
+      console.log("Winning bid:", winningBid);
+      console.log("Is auction expired:", isAuctionExpired);
+
+      const winningBidBody = new WinningBid({
+        bidder: winningBid._bidder,
+        currency: winningBid._currency,
+        bidAmount: winningBid._bidAmount,
+      });
+
       if (
         auction.status === 1 &&
         !processedAuctionIds.has(auction.auctionId.toString())
@@ -58,6 +72,8 @@ export async function processAllAuctions(
             currency: auction.currency,
             tokenType: auction.tokenType,
             status: auction.status,
+            winningBid: winningBidBody,
+            isAuctionExpired: isAuctionExpired,
           })
         );
         processedAuctionIds.add(auction.auctionId.toString());
@@ -84,6 +100,8 @@ export async function processAllAuctions(
             currency: auction.currency,
             tokenType: auction.tokenType,
             status: auction.status,
+            winningBid: winningBidBody,
+            isAuctionExpired: isAuctionExpired,
           })
         );
         processedAuctionIds.add(auction.auctionId.toString());

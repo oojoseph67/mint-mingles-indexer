@@ -8,6 +8,7 @@ export * from "./handler/auctionClosedHandler";
 export * from "./handler/newOfferHandler";
 export * from "./handler/cancelledOfferHandler";
 export * from "./handler/acceptedOfferHandler";
+export * from "./handler/newBidHandler";
 
 export * from "./handler/processAllListings";
 export * from "./handler/processAllAuctions";
