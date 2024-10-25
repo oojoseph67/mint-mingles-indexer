@@ -1,16 +1,35 @@
 type NewListing @entity {
   id: ID!
   listingCreator: String! @index
-  listingId: Int! @index
-  tokenId: Int! @index
-  quantity: Int!
-  pricePerToken: Int!
-  startTimestamp: Int!
-  endTimestamp: Int!
+  listingId: BigInt! @index
+  tokenId: BigInt!
+  quantity: BigInt!
+  pricePerToken: BigInt!
+  startTimestamp: BigInt
+  endTimestamp: BigInt!
   assetContract: String!
   currency: String!
   tokenType: Int!
   status: Int!
   reserved: Boolean!
+  transactionHash: String!
+}
+
+type NewAuction @entity {
+  id: ID!
+  auctionId: BigInt! @index
+  tokenId: BigInt! @index
+  quantity: BigInt!
+  minimumBidAmount: BigInt!
+  buyoutBidAmount: BigInt!
+  timeBufferInSeconds: BigInt!
+  bidBufferBps: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  auctionCreator: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
   transactionHash: String!
 }

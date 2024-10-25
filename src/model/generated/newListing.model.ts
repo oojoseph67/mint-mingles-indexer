@@ -1,4 +1,4 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, Index as Index_, IntColumn as IntColumn_, BooleanColumn as BooleanColumn_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, Index as Index_, BigIntColumn as BigIntColumn_, IntColumn as IntColumn_, BooleanColumn as BooleanColumn_} from "@subsquid/typeorm-store"
 
 @Entity_()
 export class NewListing {
@@ -14,24 +14,23 @@ export class NewListing {
     listingCreator!: string
 
     @Index_()
-    @IntColumn_({nullable: false})
-    listingId!: number
+    @BigIntColumn_({nullable: false})
+    listingId!: bigint
 
-    @Index_()
-    @IntColumn_({nullable: false})
-    tokenId!: number
+    @BigIntColumn_({nullable: false})
+    tokenId!: bigint
 
-    @IntColumn_({nullable: false})
-    quantity!: number
+    @BigIntColumn_({nullable: false})
+    quantity!: bigint
 
-    @IntColumn_({nullable: false})
-    pricePerToken!: number
+    @BigIntColumn_({nullable: false})
+    pricePerToken!: bigint
 
-    @IntColumn_({nullable: false})
-    startTimestamp!: number
+    @BigIntColumn_({nullable: true})
+    startTimestamp!: bigint | undefined | null
 
-    @IntColumn_({nullable: false})
-    endTimestamp!: number
+    @BigIntColumn_({nullable: false})
+    endTimestamp!: bigint
 
     @StringColumn_({nullable: false})
     assetContract!: string
