@@ -14,10 +14,17 @@ const processor = new EvmBatchProcessor()
     range: { from: 5738062 },
     address: [MARKETPLACE_CONTRACT_ADDRESS],
 
-    // new events topic
     topic0: [
+      // new events topic
       marketplaceAbi.events.NewListing.topic,
       marketplaceAbi.events.NewAuction.topic,
+
+      // cancel events topic
+      marketplaceAbi.events.CancelledListing.topic,
+      marketplaceAbi.events.CancelledAuction.topic,
+
+      // update events topic
+      marketplaceAbi.events.UpdatedListing.topic,
     ],
   })
   .setBlockRange({ from: 5738062 })
@@ -38,6 +45,7 @@ processor.run(db, async (ctx) => {
 
   for (let block of ctx.blocks) {
     console.log("Inside block loop");
+    console.log({ block });
     // On EVM, each block has four iterables - logs, transactions, traces,
     // stateDiffs
     for (let log of block.logs) {
@@ -47,6 +55,7 @@ processor.run(db, async (ctx) => {
       const isMarketplaceContract =
         log.address.toLowerCase() ===
         MARKETPLACE_CONTRACT_ADDRESS.toLowerCase();
+      console.log({ isMarketplaceContract });
 
       if (
         isMarketplaceContract &&
@@ -106,6 +115,79 @@ processor.run(db, async (ctx) => {
             transactionHash: log.transactionHash,
           })
         );
+      }
+
+      if (
+        isMarketplaceContract &&
+        log.topics[0] === marketplaceAbi.events.CancelledListing.topic
+      ) {
+        console.log("Inside cancelled listing if statement");
+        let { listingId } = marketplaceAbi.events.CancelledListing.decode(log);
+
+        // Delete the listing from the database where listingId matches
+        const listingToRemove = await ctx.store.findOne(NewListing, {
+          where: { listingId: listingId },
+        });
+
+        // Remove the listing if it exists
+        if (listingToRemove) {
+          await ctx.store.remove(NewListing, listingToRemove.id);
+        }
+      }
+
+      if (
+        isMarketplaceContract &&
+        log.topics[0] === marketplaceAbi.events.CancelledAuction.topic
+      ) {
+        console.log("Inside cancelled auction if statement");
+        let { auctionId } = marketplaceAbi.events.CancelledAuction.decode(log);
+
+        // Delete the auction from the database where auctionId matches
+        const auctionToRemove = await ctx.store.findOne(NewAuction, {
+          where: { auctionId: auctionId },
+        });
+
+        // Remove the auction if it exists
+        if (auctionToRemove) {
+          await ctx.store.remove(NewAuction, auctionToRemove.id);
+        }
+      }
+
+      if (
+        isMarketplaceContract &&
+        log.topics[0] === marketplaceAbi.events.UpdatedListing.topic
+      ) {
+        console.log("Inside updated listing if statement");
+        let { listingId, assetContract, listing, listingCreator } =
+          marketplaceAbi.events.UpdatedListing.decode(log);
+        console.log({ listing });
+
+        // Find the listing to update in the database where listingId matches
+        const listingToUpdate = await ctx.store.findOne(NewListing, {
+          where: { listingId: listingId },
+        });
+
+        // Update the listing if it exists
+        if (listingToUpdate) {
+          const updatedData = {
+            listingCreator: listingCreator,
+            listingId: listingId,
+            assetContract: assetContract,
+            tokenId: listing.tokenId,
+            quantity: listing.quantity,
+            pricePerToken: listing.pricePerToken,
+            startTimestamp: listing.startTimestamp,
+            endTimestamp: listing.endTimestamp,
+            currency: listing.currency,
+            tokenType: listing.tokenType,
+            status: listing.status,
+            reserved: listing.reserved,
+            transactionHash: log.transactionHash,
+          };
+          // Update the listing with new data
+          Object.assign(listingToUpdate, updatedData);
+          await ctx.store.save(listingToUpdate);
+        }
       }
     }
   }
