@@ -1,8 +1,16 @@
-type UsdcTransfer @entity {
+type NewListing @entity {
   id: ID!
-  block: Int!
-  from: String! @index
-  to: String! @index
-  value: BigInt!
-  txnHash: String! @index
+  listingCreator: String! @index
+  listingId: Int! @index
+  tokenId: Int! @index
+  quantity: Int!
+  pricePerToken: Int!
+  startTimestamp: Int!
+  endTimestamp: Int!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+  reserved: Boolean!
+  transactionHash: String!
 }

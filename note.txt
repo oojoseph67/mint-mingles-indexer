@@ -1,0 +1,10 @@
+sqd down
+sqd migration:clean
+sqd up
+sqd migration:generate
+sqd process
+
+
+///
+sqd codegen
+sqd typegen
