@@ -33,3 +33,26 @@ type NewAuction @entity {
   status: Int!
   transactionHash: String!
 }
+
+type NewSaleListing @entity {
+  id: ID!
+  listingCreator: String! @index
+  listingId: BigInt! @index
+  assetContract: String! @index
+  tokenId: BigInt!
+  buyer: String!
+  quantityBought: BigInt!
+  totalPricePaid: BigInt!
+  transactionHash: String!
+}
+
+type AuctionClosed @entity {
+  id: ID!
+  auctionId: BigInt! @index
+  assetContract: String! @index
+  closer: String! @index
+  tokenId: BigInt!
+  auctionCreator: String!
+  winningBidder: String!
+  transactionHash: String!
+}

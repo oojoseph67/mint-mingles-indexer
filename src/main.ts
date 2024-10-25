@@ -1,7 +1,7 @@
 import { EvmBatchProcessor } from "@subsquid/evm-processor";
 import { TypeormDatabase } from "@subsquid/typeorm-store";
 import * as marketplaceAbi from "./abi/marketplaceABI";
-import { NewAuction, NewListing } from "./model";
+import { AuctionClosed, NewAuction, NewListing, NewSaleListing } from "./model";
 
 const MARKETPLACE_CONTRACT_ADDRESS =
   "0x7Ed11a18630a9E569882Ca2F4D3488A88eF45d28";
@@ -15,16 +15,22 @@ const processor = new EvmBatchProcessor()
     address: [MARKETPLACE_CONTRACT_ADDRESS],
 
     topic0: [
-      // new events topic
+      // new listing/auction events topic
       marketplaceAbi.events.NewListing.topic,
       marketplaceAbi.events.NewAuction.topic,
 
-      // cancel events topic
+      // cancelled listing/auction events topic
       marketplaceAbi.events.CancelledListing.topic,
       marketplaceAbi.events.CancelledAuction.topic,
 
-      // update events topic
+      // updated listing event topic
       marketplaceAbi.events.UpdatedListing.topic,
+
+      // new sale event topic
+      marketplaceAbi.events.NewSale.topic,
+
+      // closed auction event topic
+      marketplaceAbi.events.AuctionClosed.topic,
     ],
   })
   .setBlockRange({ from: 5738062 })
@@ -42,6 +48,8 @@ processor.run(db, async (ctx) => {
 
   const newListings: NewListing[] = [];
   const newAuctions: NewAuction[] = [];
+  const newSaleListings: NewSaleListing[] = [];
+  const auctionClosed: AuctionClosed[] = [];
 
   for (let block of ctx.blocks) {
     console.log("Inside block loop");
@@ -57,6 +65,7 @@ processor.run(db, async (ctx) => {
         MARKETPLACE_CONTRACT_ADDRESS.toLowerCase();
       console.log({ isMarketplaceContract });
 
+      // NEW LISTING EVENT
       if (
         isMarketplaceContract &&
         log.topics[0] === marketplaceAbi.events.NewListing.topic
@@ -85,6 +94,7 @@ processor.run(db, async (ctx) => {
         );
       }
 
+      // NEW AUCTION EVENT
       if (
         isMarketplaceContract &&
         log.topics[0] === marketplaceAbi.events.NewAuction.topic
@@ -117,6 +127,7 @@ processor.run(db, async (ctx) => {
         );
       }
 
+      // CANCELLED LISTING EVENT
       if (
         isMarketplaceContract &&
         log.topics[0] === marketplaceAbi.events.CancelledListing.topic
@@ -135,6 +146,7 @@ processor.run(db, async (ctx) => {
         }
       }
 
+      // CANCELLED AUCTION EVENT
       if (
         isMarketplaceContract &&
         log.topics[0] === marketplaceAbi.events.CancelledAuction.topic
@@ -153,6 +165,7 @@ processor.run(db, async (ctx) => {
         }
       }
 
+      // UPDATED LISTING EVENT
       if (
         isMarketplaceContract &&
         log.topics[0] === marketplaceAbi.events.UpdatedListing.topic
@@ -189,10 +202,92 @@ processor.run(db, async (ctx) => {
           await ctx.store.save(listingToUpdate);
         }
       }
+
+      // NEW SALE LISTING EVENT
+      if (
+        isMarketplaceContract &&
+        log.topics[0] === marketplaceAbi.events.NewSale.topic
+      ) {
+        console.log("Inside new sale if statement");
+
+        let {
+          listingId,
+          assetContract,
+          tokenId,
+          quantityBought,
+          totalPricePaid,
+          buyer,
+          listingCreator,
+        } = marketplaceAbi.events.NewSale.decode(log);
+
+        newSaleListings.push(
+          new NewSaleListing({
+            id: log.id,
+            listingCreator: listingCreator,
+            listingId: listingId,
+            assetContract: assetContract,
+            tokenId: tokenId,
+            quantityBought: quantityBought,
+            totalPricePaid: totalPricePaid,
+            buyer: buyer,
+            transactionHash: log.transactionHash,
+          })
+        );
+
+        // this is to remove the listing from the new-listing database after it has been sold
+        const listingToRemove = await ctx.store.findOne(NewListing, {
+          where: { listingId: listingId },
+        });
+
+        if (listingToRemove) {
+          await ctx.store.remove(NewListing, listingToRemove.id);
+        }
+      }
+
+      // AUCTION CLOSED EVENT (Auction was completed)
+      if (
+        isMarketplaceContract &&
+        log.topics[0] === marketplaceAbi.events.AuctionClosed.topic
+      ) {
+        console.log("Inside auction closed if statement");
+
+        let {
+          assetContract,
+          auctionId,
+          closer,
+          tokenId,
+          auctionCreator,
+          winningBidder,
+        } = marketplaceAbi.events.AuctionClosed.decode(log);
+
+        auctionClosed.push(
+          new AuctionClosed({
+            id: log.id,
+            auctionId: auctionId,
+            assetContract: assetContract,
+            closer: closer,
+            tokenId: tokenId,
+            auctionCreator: auctionCreator,
+            winningBidder: winningBidder,
+            transactionHash: log.transactionHash,
+          })
+        );
+
+        // this is to remove the auction from the new-auction database after it has been closed
+        const auctionToRemove = await ctx.store.findOne(NewAuction, {
+          where: { auctionId: auctionId },
+        });
+
+        if (auctionToRemove) {
+          await ctx.store.remove(NewAuction, auctionToRemove.id);
+        }
+      }
     }
   }
 
   // Just one insert per batch!
   await ctx.store.insert(newListings);
   await ctx.store.insert(newAuctions);
+  await ctx.store.insert(newSaleListings);
+  await ctx.store.insert(auctionClosed);
 });
