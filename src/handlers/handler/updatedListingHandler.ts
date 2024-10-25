@@ -1,9 +1,10 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { NewListing } from "../../model";
-import { Context } from "../../types";
+import { DataHandlerContext } from "@subsquid/evm-processor";
+import { Store } from "@subsquid/typeorm-store";
 
 export async function handleUpdatedListing(
-  ctx: Context,
+  ctx: DataHandlerContext<Store, any>,
   log: any
 ): Promise<void> {
   let { listingId, assetContract, listing, listingCreator } =

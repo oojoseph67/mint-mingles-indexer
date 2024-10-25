@@ -1,9 +1,10 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { AuctionClosed, NewAuction } from "../../model";
-import { Context } from "../../types";
+import { DataHandlerContext } from "@subsquid/evm-processor";
+import { Store } from "@subsquid/typeorm-store";
 
 export async function handleAuctionClosed(
-  ctx: Context,
+  ctx: DataHandlerContext<Store, any>,
   log: any
 ): Promise<AuctionClosed> {
   console.log("Inside new sale if statement");
