@@ -1,17 +1,27 @@
 import { EvmBatchProcessor } from "@subsquid/evm-processor";
 import { TypeormDatabase } from "@subsquid/typeorm-store";
 import * as marketplaceAbi from "./abi/marketplaceABI";
-import { AuctionClosed, NewAuction, NewListing, NewSaleListing } from "./model";
+import {
+  AllListing,
+  AuctionClosed,
+  NewAuction,
+  NewListing,
+  NewSaleListing,
+} from "./model";
+import { v4 as uuidv4 } from "uuid";
 
-const MARKETPLACE_CONTRACT_ADDRESS =
+export const MARKETPLACE_CONTRACT_ADDRESS =
   "0x7Ed11a18630a9E569882Ca2F4D3488A88eF45d28";
+
+const contractFirstBlock = 4883457;
+const defaultBlock = 5740731;
 
 const processor = new EvmBatchProcessor()
   .setGateway("https://v2.archive.subsquid.io/network/crossfi-testnet")
   .setRpcEndpoint("https://rpc.xfi.ms/archive/4157")
   .setFinalityConfirmation(75)
   .addLog({
-    range: { from: 5738062 },
+    range: { from: defaultBlock },
     address: [MARKETPLACE_CONTRACT_ADDRESS],
 
     topic0: [
@@ -33,8 +43,8 @@ const processor = new EvmBatchProcessor()
       marketplaceAbi.events.AuctionClosed.topic,
     ],
   })
-  .setBlockRange({ from: 5738062 })
-  .includeAllBlocks({ from: 5738062 })
+  .setBlockRange({ from: defaultBlock })
+  .includeAllBlocks({ from: defaultBlock })
   .setFields({
     log: {
       transactionHash: true,
@@ -50,15 +60,17 @@ processor.run(db, async (ctx) => {
   const newAuctions: NewAuction[] = [];
   const newSaleListings: NewSaleListing[] = [];
   const auctionClosed: AuctionClosed[] = [];
+  const allListings: AllListing[] = [];
+  const processedListingIds = new Set<string>();
 
   for (let block of ctx.blocks) {
     console.log("Inside block loop");
-    console.log({ block });
+    console.log("Processing block:", block.header.height);
     // On EVM, each block has four iterables - logs, transactions, traces,
     // stateDiffs
     for (let log of block.logs) {
       console.log("Inside log loop");
-      console.log({ log });
+      // console.log({ log });
 
       const isMarketplaceContract =
         log.address.toLowerCase() ===
@@ -73,7 +85,7 @@ processor.run(db, async (ctx) => {
         console.log("Inside new listing if statement");
         let { assetContract, listing, listingCreator, listingId } =
           marketplaceAbi.events.NewListing.decode(log);
-        console.log({ listing });
+        // console.log({ listing });
         newListings.push(
           new NewListing({
             id: log.id,
@@ -103,7 +115,7 @@ processor.run(db, async (ctx) => {
 
         let { assetContract, auction, auctionCreator, auctionId } =
           marketplaceAbi.events.NewAuction.decode(log);
-        console.log({ auction });
+        // console.log({ auction });
 
         newAuctions.push(
           new NewAuction({
@@ -173,7 +185,7 @@ processor.run(db, async (ctx) => {
         console.log("Inside updated listing if statement");
         let { listingId, assetContract, listing, listingCreator } =
           marketplaceAbi.events.UpdatedListing.decode(log);
-        console.log({ listing });
+        // console.log({ listing });
 
         // Find the listing to update in the database where listingId matches
         const listingToUpdate = await ctx.store.findOne(NewListing, {
@@ -283,6 +295,59 @@ processor.run(db, async (ctx) => {
         }
       }
     }
+
+    // CONTRACT QUERY CALL
+    const contract = new marketplaceAbi.Contract(
+      ctx,
+      block.header,
+      MARKETPLACE_CONTRACT_ADDRESS.toLowerCase()
+    );
+
+    const totalListings = await contract.totalListings();
+    console.log("Total listings:", totalListings.toString());
+
+    const lastProcessedListing = await ctx.store.findOne(AllListing, {
+      order: { listingId: "DESC" },
+      where: {},
+    });
+
+    const startIndex = lastProcessedListing
+      ? Number(lastProcessedListing.listingId) + 1
+      : 0;
+    const endIndex = Number(totalListings) - 1;
+
+    console.log({ startIndex, endIndex });
+
+    if (startIndex <= endIndex) {
+      const newListings = await contract.getAllListings(startIndex, endIndex);
+      console.log(`Fetching listings from ${startIndex} to ${endIndex}`);
+
+      for (const listing of newListings) {
+        if (
+          listing.status === 1 &&
+          !processedListingIds.has(listing.listingId.toString())
+        ) {
+          allListings.push(
+            new AllListing({
+              id: uuidv4(),
+              listingId: listing.listingId,
+              tokenId: listing.tokenId,
+              quantity: listing.quantity,
+              pricePerToken: listing.pricePerToken,
+              startTimestamp: listing.startTimestamp,
+              endTimestamp: listing.endTimestamp,
+              listingCreator: listing.listingCreator,
+              assetContract: listing.assetContract,
+              currency: listing.currency,
+              tokenType: listing.tokenType,
+              status: listing.status,
+              reserved: listing.reserved,
+            })
+          );
+          processedListingIds.add(listing.listingId.toString());
+        }
+      }
+    }
   }
 
   // Just one insert per batch!
@@ -290,4 +355,8 @@ processor.run(db, async (ctx) => {
   await ctx.store.insert(newAuctions);
   await ctx.store.insert(newSaleListings);
   await ctx.store.insert(auctionClosed);
+
+  if (allListings.length > 0) {
+    await ctx.store.insert(allListings);
+  }
 });

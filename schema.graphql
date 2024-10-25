@@ -56,3 +56,19 @@ type AuctionClosed @entity {
   winningBidder: String!
   transactionHash: String!
 }
+
+type AllListing @entity {
+  id: ID!
+  listingId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  pricePerToken: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+  listingCreator: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+  reserved: Boolean!
+}
