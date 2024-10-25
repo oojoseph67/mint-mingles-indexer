@@ -124,3 +124,57 @@ type CompletedAuction @entity {
   tokenType: Int!
   status: Int!
 }
+
+type AllOffers @entity {
+  id: ID!
+  offerId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  totalPrice: BigInt!
+  expirationTimestamp: BigInt!
+  offeror: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+}
+
+type CompletedOffers @entity {
+  id: ID!
+  offerId: BigInt!
+  tokenId: BigInt!
+  quantity: BigInt!
+  totalPrice: BigInt!
+  expirationTimestamp: BigInt!
+  offeror: String!
+  assetContract: String!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+}
+
+type NewOffer @entity {
+  id: ID!
+  offeror: String!
+  offerId: BigInt!
+  assetContract: String!
+  tokenId: BigInt!
+  quantity: BigInt!
+  totalPrice: BigInt!
+  expirationTimestamp: BigInt!
+  currency: String!
+  tokenType: Int!
+  status: Int!
+  transactionHash: String!
+}
+
+type AcceptedOffers @entity {
+  id: ID!
+  offerId: BigInt!
+  assetContract: String!
+  offeror: String!
+  quantityBought: BigInt!
+  seller: String!
+  tokenId: BigInt!
+  totalPricePaid: BigInt!
+}

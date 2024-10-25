@@ -2,25 +2,33 @@ import { EvmBatchProcessor } from "@subsquid/evm-processor";
 import { TypeormDatabase } from "@subsquid/typeorm-store";
 import * as marketplaceAbi from "./abi/marketplaceABI";
 import {
+  AcceptedOffers,
   AllAuction,
   AllListing,
+  AllOffers,
   AuctionClosed,
   CompletedAuction,
   CompletedListing,
+  CompletedOffers,
   NewAuction,
   NewListing,
+  NewOffer,
   NewSaleListing,
 } from "./model";
 import {
+  handleAcceptedOffer,
   handleAuctionClosed,
   handleCancelledAuction,
   handleCancelledListing,
+  handleCancelledOffer,
   handleNewAuction,
   handleNewListing,
+  handleNewOffer,
   handleNewSale,
   handleUpdatedListing,
   processAllAuctions,
   processAllListings,
+  processAllOffers,
 } from "./handlers";
 
 export const MARKETPLACE_CONTRACT_ADDRESS =
@@ -54,6 +62,11 @@ const processor = new EvmBatchProcessor()
 
       // closed auction event topic
       marketplaceAbi.events.AuctionClosed.topic,
+
+      // offers events topic
+      marketplaceAbi.events.NewOffer.topic,
+      marketplaceAbi.events.AcceptedOffer.topic,
+      marketplaceAbi.events.CancelledOffer.topic,
     ],
   })
   .setBlockRange({ from: 5743489 })
@@ -77,9 +90,15 @@ processor.run(db, async (ctx) => {
   const completedListings: CompletedListing[] = [];
   const allAuctions: AllAuction[] = [];
   const completedAuctions: CompletedAuction[] = [];
+  const newOffers: NewOffer[] = [];
+  const acceptedOffers: AcceptedOffers[] = [];
+  const allOffers: AllOffers[] = [];
+  const completedOffers: CompletedOffers[] = [];
 
   let processedListingIds = new Set<string>();
   let processedAuctionIds = new Set<string>();
+  let processedOfferIds = new Set<string>();
+
   for (let block of ctx.blocks) {
     console.log("Inside block loop");
     console.log("Processing block:", block.header.height);
@@ -116,6 +135,15 @@ processor.run(db, async (ctx) => {
           case marketplaceAbi.events.AuctionClosed.topic.toLowerCase():
             auctionClosed.push(await handleAuctionClosed(ctx, log));
             break;
+          case marketplaceAbi.events.NewOffer.topic.toLowerCase():
+            newOffers.push(await handleNewOffer(ctx, log));
+            break;
+          case marketplaceAbi.events.CancelledOffer.topic.toLowerCase():
+            await handleCancelledOffer(ctx, log);
+            break;
+          case marketplaceAbi.events.AcceptedOffer.topic.toLowerCase():
+            acceptedOffers.push(await handleAcceptedOffer(ctx, log));
+            break;
         }
       }
     }
@@ -126,6 +154,7 @@ processor.run(db, async (ctx) => {
     //   MARKETPLACE_CONTRACT_ADDRESS.toLowerCase()
     // );
 
+    // ALL LISTINGS QUERY
     const { newAllListings, newCompletedListings, updatedProcessedListingIds } =
       await processAllListings(ctx, block.header, processedListingIds);
 
@@ -133,12 +162,21 @@ processor.run(db, async (ctx) => {
     completedListings.push(...newCompletedListings);
     processedListingIds = updatedProcessedListingIds;
 
+    // ALL AUCTIONS QUERY
     const { newAllAuctions, newCompletedAuctions, updatedProcessedAuctionIds } =
       await processAllAuctions(ctx, block.header, processedAuctionIds);
 
     allAuctions.push(...newAllAuctions);
     completedAuctions.push(...newCompletedAuctions);
     processedAuctionIds = updatedProcessedAuctionIds;
+
+    // ALL OFFERS QUERY
+    const { newAllOffers, newCompletedOffers, updatedProcessedOfferIds } =
+      await processAllOffers(ctx, block.header, processedOfferIds);
+
+    allOffers.push(...newAllOffers);
+    completedOffers.push(...newCompletedOffers);
+    processedOfferIds = updatedProcessedOfferIds;
   }
 
   // Just one insert per batch!
@@ -146,6 +184,8 @@ processor.run(db, async (ctx) => {
   await ctx.store.insert(newAuctions);
   await ctx.store.insert(newSaleListings);
   await ctx.store.insert(auctionClosed);
+  await ctx.store.insert(newOffers);
+  await ctx.store.insert(acceptedOffers);
 
   if (allListings.length > 0) {
     await ctx.store.insert(allListings);
@@ -161,5 +201,13 @@ processor.run(db, async (ctx) => {
 
   if (completedAuctions.length > 0) {
     await ctx.store.insert(completedAuctions);
+  }
+
+  if (allOffers.length > 0) {
+    await ctx.store.insert(allOffers);
+  }
+
+  if (completedOffers.length > 0) {
+    await ctx.store.insert(completedOffers);
   }
 });
