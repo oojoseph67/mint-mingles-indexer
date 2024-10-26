@@ -53,8 +53,8 @@ export class AllAuction {
     @Column_("jsonb", {transformer: {to: obj => obj.toJSON(), from: obj => obj == null ? undefined : new WinningBid(undefined, obj)}, nullable: false})
     winningBid!: WinningBid
 
-    @BooleanColumn_({nullable: false})
-    isAuctionExpired!: boolean
+    @BooleanColumn_({nullable: true})
+    isAuctionExpired!: boolean | undefined | null
 
     @IntColumn_({nullable: false})
     status!: number

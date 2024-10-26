@@ -19,9 +19,11 @@ import {
 import {
   handleAcceptedOffer,
   handleAuctionClosed,
+  handleBidInAuction,
   handleCancelledAuction,
   handleCancelledListing,
   handleCancelledOffer,
+  handleCollectAuctionPayout,
   handleNewAuction,
   handleNewBid,
   handleNewListing,
@@ -36,15 +38,18 @@ import {
 export const MARKETPLACE_CONTRACT_ADDRESS =
   "0x7Ed11a18630a9E569882Ca2F4D3488A88eF45d28";
 
-const contractFirstBlock = 4883457;
-const defaultBlock = 5738062;
+const contractFirstBlock = 4925931;
+const defaultBlock = 5753792;
 
 const processor = new EvmBatchProcessor()
   .setGateway("https://v2.archive.subsquid.io/network/crossfi-testnet")
   .setRpcEndpoint("https://rpc.xfi.ms/archive/4157")
+  // .setRpcEndpoint(
+  //   process.env.ALCHEMY_RPC_URL
+  // )
   .setFinalityConfirmation(75)
   .addLog({
-    range: { from: 5743489 },
+    range: { from: defaultBlock },
     address: [MARKETPLACE_CONTRACT_ADDRESS],
 
     topic0: [
@@ -73,8 +78,8 @@ const processor = new EvmBatchProcessor()
       marketplaceAbi.events.NewBid.topic,
     ],
   })
-  .setBlockRange({ from: 5743489 })
-  .includeAllBlocks({ from: 5743489 })
+  .setBlockRange({ from: defaultBlock })
+  .includeAllBlocks({ from: defaultBlock })
   .setFields({
     log: {
       transactionHash: true,
@@ -139,6 +144,7 @@ processor.run(db, async (ctx) => {
             break;
           case marketplaceAbi.events.AuctionClosed.topic.toLowerCase():
             auctionClosed.push(await handleAuctionClosed(ctx, log));
+            await handleCollectAuctionPayout(ctx, log);
             break;
           case marketplaceAbi.events.NewOffer.topic.toLowerCase():
             newOffers.push(await handleNewOffer(ctx, log));
@@ -151,6 +157,7 @@ processor.run(db, async (ctx) => {
             break;
           case marketplaceAbi.events.NewBid.topic.toLowerCase():
             newBids.push(await handleNewBid(ctx, log));
+            await handleBidInAuction(ctx, log);
             break;
         }
       }

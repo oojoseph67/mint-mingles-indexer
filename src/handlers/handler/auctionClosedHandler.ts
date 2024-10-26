@@ -23,9 +23,9 @@ export async function handleAuctionClosed(
     where: { auctionId: auctionId, assetContract: assetContract },
   });
 
-  const auctionToRemoveAll = await ctx.store.find(AllAuction, {
-    where: { auctionId: auctionId, assetContract: assetContract },
-  });
+  // const auctionToRemoveAll = await ctx.store.find(AllAuction, {
+  //   where: { auctionId: auctionId, assetContract: assetContract },
+  // });
 
   const bidsToRemove = await ctx.store.find(NewBid, {
     where: { auctionId: auctionId, assetContract: assetContract },
@@ -37,11 +37,11 @@ export async function handleAuctionClosed(
     }
   }
 
-  if (auctionToRemoveAll) {
-    for (const auction of auctionToRemoveAll) {
-      await ctx.store.remove(AllAuction, auction.id);
-    }
-  }
+  // if (auctionToRemoveAll) {
+  //   for (const auction of auctionToRemoveAll) {
+  //     await ctx.store.remove(AllAuction, auction.id);
+  //   }
+  // }
 
   if (bidsToRemove) {
     for (const bid of bidsToRemove) {

@@ -131,7 +131,7 @@ type AllAuction @entity {
   currency: String!
   tokenType: Int!
   winningBid: WinningBid!
-  isAuctionExpired: Boolean!
+  isAuctionExpired: Boolean
   status: Int!
 }
 
@@ -151,7 +151,7 @@ type CompletedAuction @entity {
   currency: String!
   tokenType: Int!
   winningBid: WinningBid!
-  isAuctionExpired: Boolean!
+  isAuctionExpired: Boolean
   status: Int!
 }
 
