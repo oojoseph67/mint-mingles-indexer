@@ -41,6 +41,12 @@ export async function processAllOffers(
 
     for (const offer of newOffers) {
       if (!processedOfferIds.has(offer.offerId.toString())) {
+        await saveNFT({
+          contractAddress: offer.assetContract,
+          tokenId: offer.tokenId,
+          ctx: ctx,
+        });
+
         if (offer.status === 1) {
           const nft = await ctx.store.findOne(NFT, {
             where: {

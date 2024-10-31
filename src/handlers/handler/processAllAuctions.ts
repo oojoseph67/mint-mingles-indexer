@@ -44,6 +44,12 @@ export async function processAllAuctions(
       if (!processedAuctionIds.has(auction.auctionId.toString())) {
         const winningBid = await contract.getWinningBid(auction.auctionId);
 
+        await saveNFT({
+          contractAddress: auction.assetContract,
+          tokenId: auction.tokenId,
+          ctx: ctx,
+        });
+
         const winningBidBody = new WinningBid({
           bidder: winningBid._bidder,
           currency: winningBid._currency,
