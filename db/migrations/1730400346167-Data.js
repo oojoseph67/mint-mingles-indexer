@@ -1,5 +1,5 @@
-module.exports = class Data1730393156903 {
-    name = 'Data1730393156903'
+module.exports = class Data1730400346167 {
+    name = 'Data1730400346167'
 
     async up(db) {
         await db.query(`CREATE TABLE "new_listing" ("id" character varying NOT NULL, "listing_creator" text NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric, "end_timestamp" numeric NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, "transaction_hash" text NOT NULL, CONSTRAINT "PK_b488e12815dbd3bf227ff7221b6" PRIMARY KEY ("id"))`)
@@ -16,7 +16,9 @@ module.exports = class Data1730393156903 {
         await db.query(`CREATE INDEX "IDX_d2e1634168693b877c85218121" ON "auction_closed" ("auction_id") `)
         await db.query(`CREATE INDEX "IDX_a0c67476a82748dfa9f1f7feab" ON "auction_closed" ("asset_contract") `)
         await db.query(`CREATE INDEX "IDX_7bb0cfc2e72302638d8f9c611d" ON "auction_closed" ("closer") `)
-        await db.query(`CREATE TABLE "all_listing" ("id" character varying NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "listing_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, CONSTRAINT "PK_614454c94a2f72e905ca1eb87fd" PRIMARY KEY ("id"))`)
+        await db.query(`CREATE TABLE "nft" ("id" character varying NOT NULL, "owner" text NOT NULL, "token_id" numeric NOT NULL, "token_uri" text NOT NULL, "type" text NOT NULL, "asset_contract" text NOT NULL, "metadata" jsonb NOT NULL, CONSTRAINT "PK_8f46897c58e23b0e7bf6c8e56b0" PRIMARY KEY ("id"))`)
+        await db.query(`CREATE TABLE "all_listing" ("id" character varying NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "listing_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, "nft_id" character varying, CONSTRAINT "PK_614454c94a2f72e905ca1eb87fd" PRIMARY KEY ("id"))`)
+        await db.query(`CREATE INDEX "IDX_5dc6adafda4963b8d9bf04eedf" ON "all_listing" ("nft_id") `)
         await db.query(`CREATE TABLE "new_bid" ("id" character varying NOT NULL, "auction_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "bidder" text NOT NULL, "bid_amount" numeric NOT NULL, "minimum_bid_amount" numeric NOT NULL, "buyout_bid_amount" numeric NOT NULL, "time_buffer_in_seconds" numeric NOT NULL, "bid_buffer_bps" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "auction_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, CONSTRAINT "PK_82bbb4305e684aedf9b8e675d0a" PRIMARY KEY ("id"))`)
         await db.query(`CREATE TABLE "completed_listing" ("id" character varying NOT NULL, "listing_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "price_per_token" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "listing_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "reserved" boolean NOT NULL, CONSTRAINT "PK_16f6654e683fc0918ce55e230a1" PRIMARY KEY ("id"))`)
         await db.query(`CREATE TABLE "all_auction" ("id" character varying NOT NULL, "auction_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "minimum_bid_amount" numeric NOT NULL, "buyout_bid_amount" numeric NOT NULL, "time_buffer_in_seconds" numeric NOT NULL, "bid_buffer_bps" numeric NOT NULL, "start_timestamp" numeric NOT NULL, "end_timestamp" numeric NOT NULL, "auction_creator" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "winning_bid" jsonb NOT NULL, "is_auction_expired" boolean, "status" integer NOT NULL, CONSTRAINT "PK_ab94fecb5b40ddd8791d2e8c325" PRIMARY KEY ("id"))`)
@@ -25,6 +27,7 @@ module.exports = class Data1730393156903 {
         await db.query(`CREATE TABLE "completed_offers" ("id" character varying NOT NULL, "offer_id" numeric NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "total_price" numeric NOT NULL, "expiration_timestamp" numeric NOT NULL, "offeror" text NOT NULL, "asset_contract" text NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, CONSTRAINT "PK_b8920e680ea98fd520d33685a5a" PRIMARY KEY ("id"))`)
         await db.query(`CREATE TABLE "new_offer" ("id" character varying NOT NULL, "offeror" text NOT NULL, "offer_id" numeric NOT NULL, "asset_contract" text NOT NULL, "token_id" numeric NOT NULL, "quantity" numeric NOT NULL, "total_price" numeric NOT NULL, "expiration_timestamp" numeric NOT NULL, "currency" text NOT NULL, "token_type" integer NOT NULL, "status" integer NOT NULL, "transaction_hash" text NOT NULL, CONSTRAINT "PK_d5ec02a69099abe12cc997e6c7c" PRIMARY KEY ("id"))`)
         await db.query(`CREATE TABLE "accepted_offers" ("id" character varying NOT NULL, "offer_id" numeric NOT NULL, "asset_contract" text NOT NULL, "offeror" text NOT NULL, "quantity_bought" numeric NOT NULL, "seller" text NOT NULL, "token_id" numeric NOT NULL, "total_price_paid" numeric NOT NULL, CONSTRAINT "PK_8a052c171a00cba9015e0cdd05b" PRIMARY KEY ("id"))`)
+        await db.query(`ALTER TABLE "all_listing" ADD CONSTRAINT "FK_5dc6adafda4963b8d9bf04eedfe" FOREIGN KEY ("nft_id") REFERENCES "nft"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`)
     }
 
     async down(db) {
@@ -42,7 +45,9 @@ module.exports = class Data1730393156903 {
         await db.query(`DROP INDEX "public"."IDX_d2e1634168693b877c85218121"`)
         await db.query(`DROP INDEX "public"."IDX_a0c67476a82748dfa9f1f7feab"`)
         await db.query(`DROP INDEX "public"."IDX_7bb0cfc2e72302638d8f9c611d"`)
+        await db.query(`DROP TABLE "nft"`)
         await db.query(`DROP TABLE "all_listing"`)
+        await db.query(`DROP INDEX "public"."IDX_5dc6adafda4963b8d9bf04eedf"`)
         await db.query(`DROP TABLE "new_bid"`)
         await db.query(`DROP TABLE "completed_listing"`)
         await db.query(`DROP TABLE "all_auction"`)
@@ -51,5 +56,6 @@ module.exports = class Data1730393156903 {
         await db.query(`DROP TABLE "completed_offers"`)
         await db.query(`DROP TABLE "new_offer"`)
         await db.query(`DROP TABLE "accepted_offers"`)
+        await db.query(`ALTER TABLE "all_listing" DROP CONSTRAINT "FK_5dc6adafda4963b8d9bf04eedfe"`)
     }
 }

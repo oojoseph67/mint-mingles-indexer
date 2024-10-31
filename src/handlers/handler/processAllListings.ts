@@ -1,4 +1,11 @@
-import { AllListing, CompletedListing } from "../../model";
+import {
+  AllListing,
+  CompletedListing,
+  NFT,
+  NFTAttribute,
+  NFTMetadata,
+  NFTProperty,
+} from "../../model";
 import { v4 as uuidv4 } from "uuid";
 import {
   BlockType,
@@ -43,12 +50,60 @@ export async function processAllListings(
     console.log(`Fetching listings from ${startIndex} to ${endIndex}`);
 
     for (const listing of newListings) {
+      let dbNFT: NFT;
+
       const nft = await getNFTCustom({
         contractAddress: listing.assetContract,
         tokenId: listing.tokenId,
       });
 
       console.log("NFT: for loop", nft);
+      console.log("NFT: for loop metadata", nft.metadata);
+      console.log("NFT: for loop attributes", nft.metadata.attributes);
+      console.log("NFT: for loop properties", nft.metadata.properties);
+
+      const attributes = nft.metadata.attributes.map(
+        (attr) =>
+          new NFTAttribute({
+            traitType: attr.traitType,
+            value: attr.value,
+          })
+      );
+
+      const properties = nft.metadata.properties.map(
+        (prop) =>
+          new NFTProperty({
+            name: prop.name,
+            value: prop.value,
+          })
+      );
+
+      const metadata = new NFTMetadata({
+        name: nft.metadata.name || "",
+        description: nft.metadata.description || "",
+        image: nft.metadata.image || "",
+        animationUrl: nft.metadata.animationUrl || "",
+        externalUrl: nft.metadata.externalUrl || "",
+        backgroundColor: nft.metadata.backgroundColor || "",
+        supply: nft.metadata.supply || 0,
+        imageUrl: nft.metadata.imageUrl || "",
+        customImage: nft.metadata.customImage || "",
+        customAnimationUrl: nft.metadata.customAnimationUrl || "",
+        attributes: attributes,
+        properties: properties,
+      });
+
+      dbNFT = new NFT({
+        id: uuidv4(),
+        owner: nft.owner || "",
+        tokenId: listing.tokenId,
+        tokenURI: nft.tokenURI || "",
+        type: nft.type || "",
+        assetContract: listing.assetContract,
+        metadata: metadata,
+      });
+
+      await ctx.store.insert(dbNFT);
 
       if (
         listing.status === 1 &&
@@ -70,6 +125,7 @@ export async function processAllListings(
           tokenType: listing.tokenType,
           status: listing.status,
           reserved: listing.reserved,
+          nft: dbNFT,
         });
 
         newAllListings.push(allListing);

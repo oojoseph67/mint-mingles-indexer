@@ -71,6 +71,7 @@ type AllListing @entity {
   tokenType: Int!
   status: Int!
   reserved: Boolean!
+  nft: NFT
 }
 
 type NewBid @entity {
@@ -207,4 +208,39 @@ type AcceptedOffers @entity {
   seller: String!
   tokenId: BigInt!
   totalPricePaid: BigInt!
+}
+
+type NFT @entity {
+  id: ID!
+  owner: String!
+  tokenId: BigInt!
+  tokenURI: String!
+  type: String!
+  assetContract: String!
+  metadata: NFTMetadata!
+}
+
+type NFTMetadata {
+  name: String
+  description: String
+  image: String
+  animationUrl: String
+  externalUrl: String
+  backgroundColor: String
+  supply: Int
+  imageUrl: String
+  customImage: String
+  customAnimationUrl: String
+  attributes: [NFTAttribute]
+  properties: [NFTProperty]
+}
+
+type NFTAttribute {
+  traitType: String
+  value: String
+}
+
+type NFTProperty {
+  name: String
+  value: String
 }

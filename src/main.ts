@@ -50,7 +50,7 @@ export const MARKETPLACE_CONTRACT_ADDRESS =
 const contractFirstBlock = 4925931;
 // const defaultBlock = 5833437;
 
-const defaultBlock = 5839950;
+const defaultBlock = 5841371;
 
 export const processor = new EvmBatchProcessor()
   .setGateway("https://v2.archive.subsquid.io/network/crossfi-testnet")
