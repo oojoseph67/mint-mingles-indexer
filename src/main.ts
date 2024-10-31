@@ -50,7 +50,7 @@ export const MARKETPLACE_CONTRACT_ADDRESS =
 const contractFirstBlock = 4925931;
 // const defaultBlock = 5833437;
 
-const defaultBlock = 5841371;
+const defaultBlock = 5843498;
 
 export const processor = new EvmBatchProcessor()
   .setGateway("https://v2.archive.subsquid.io/network/crossfi-testnet")
@@ -134,39 +134,39 @@ processor.run(db, async (ctx) => {
 
         switch (log.topics[0].toLowerCase()) {
           case marketplaceAbi.events.NewListing.topic.toLowerCase():
-            newListings.push(await handleNewListing(log));
+            newListings.push(await handleNewListing({ ctx, log }));
             break;
           case marketplaceAbi.events.NewAuction.topic.toLowerCase():
-            newAuctions.push(await handleNewAuction(log));
+            newAuctions.push(await handleNewAuction({ ctx, log }));
             break;
           case marketplaceAbi.events.CancelledListing.topic.toLowerCase():
-            await handleCancelledListing(ctx, log);
+            await handleCancelledListing({ ctx, log });
             break;
           case marketplaceAbi.events.CancelledAuction.topic.toLowerCase():
-            await handleCancelledAuction(ctx, log);
+            await handleCancelledAuction({ ctx, log });
             break;
           case marketplaceAbi.events.UpdatedListing.topic.toLowerCase():
-            await handleUpdatedListing(ctx, log);
+            await handleUpdatedListing({ ctx, log });
             break;
           case marketplaceAbi.events.NewSale.topic.toLowerCase():
-            newSaleListings.push(await handleNewSale(ctx, log));
+            newSaleListings.push(await handleNewSale({ ctx, log }));
             break;
           case marketplaceAbi.events.AuctionClosed.topic.toLowerCase():
-            auctionClosed.push(await handleAuctionClosed(ctx, log));
-            await handleCollectAuctionPayout(ctx, log);
+            auctionClosed.push(await handleAuctionClosed({ ctx, log }));
+            await handleCollectAuctionPayout({ ctx, log });
             break;
           case marketplaceAbi.events.NewOffer.topic.toLowerCase():
-            newOffers.push(await handleNewOffer(log));
+            newOffers.push(await handleNewOffer({ ctx, log }));
             break;
           case marketplaceAbi.events.CancelledOffer.topic.toLowerCase():
-            await handleCancelledOffer(ctx, log);
+            await handleCancelledOffer({ ctx, log });
             break;
           case marketplaceAbi.events.AcceptedOffer.topic.toLowerCase():
-            acceptedOffers.push(await handleAcceptedOffer(ctx, log));
+            acceptedOffers.push(await handleAcceptedOffer({ ctx, log }));
             break;
           case marketplaceAbi.events.NewBid.topic.toLowerCase():
-            newBids.push(await handleNewBid(log));
-            await handleBidInAuction(ctx, log);
+            newBids.push(await handleNewBid({ ctx, log }));
+            await handleBidInAuction({ ctx, log });
             break;
         }
       }

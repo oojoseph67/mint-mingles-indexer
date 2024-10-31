@@ -2,10 +2,13 @@ import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { ContextType, LogType } from "../../main";
 import { AllAuction, NewAuction } from "../../model";
 
-export async function handleCancelledAuction(
-  ctx: ContextType,
-  log: LogType
-): Promise<void> {
+export async function handleCancelledAuction({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}): Promise<void> {
   let { auctionId } = marketplaceAbi.events.CancelledAuction.decode(log);
 
   // Delete the auction from the database where auctionId matches

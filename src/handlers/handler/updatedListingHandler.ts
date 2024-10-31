@@ -2,10 +2,13 @@ import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { ContextType, LogType } from "../../main";
 import { NewListing, AllListing } from "../../model";
 
-export async function handleUpdatedListing(
-  ctx: ContextType,
-  log: LogType
-): Promise<void> {
+export async function handleUpdatedListing({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}): Promise<void> {
   let { listingId, assetContract, listing, listingCreator } =
     marketplaceAbi.events.UpdatedListing.decode(log);
 

@@ -1,13 +1,13 @@
-import { AllAuction, CompletedAuction, WinningBid } from "../../model";
+import { AllAuction, CompletedAuction, NFT, WinningBid } from "../../model";
 import { v4 as uuidv4 } from "uuid";
-import { DataHandlerContext, Log } from "@subsquid/evm-processor";
-import { Store } from "@subsquid/typeorm-store";
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 import {
   BlockType,
   ContextType,
+  LogType,
   MARKETPLACE_CONTRACT_ADDRESS,
 } from "../../main";
+import { saveNFT } from "../../utils/blockchain";
 
 export async function processAllAuctions(
   ctx: ContextType,
@@ -55,6 +55,13 @@ export async function processAllAuctions(
             auction.auctionId
           );
 
+          const nft = await ctx.store.findOne(NFT, {
+            where: {
+              tokenId: auction.tokenId,
+              assetContract: auction.assetContract.toLowerCase(),
+            },
+          });
+
           newAllAuctions.push(
             new AllAuction({
               id: uuidv4(),
@@ -68,16 +75,24 @@ export async function processAllAuctions(
               startTimestamp: auction.startTimestamp,
               endTimestamp: auction.endTimestamp,
               auctionCreator: auction.auctionCreator,
-              assetContract: auction.assetContract,
+              assetContract: auction.assetContract.toLowerCase(),
               currency: auction.currency,
               tokenType: auction.tokenType,
               status: auction.status,
               winningBid: winningBidBody,
               isAuctionExpired: isAuctionExpired,
+              nft: nft,
             })
           );
           processedAuctionIds.add(auction.auctionId.toString());
         } else if (auction.status === 2) {
+          const nft = await ctx.store.findOne(NFT, {
+            where: {
+              tokenId: auction.tokenId,
+              assetContract: auction.assetContract.toLowerCase(),
+            },
+          });
+
           newCompletedAuctions.push(
             new CompletedAuction({
               id: uuidv4(),
@@ -91,12 +106,13 @@ export async function processAllAuctions(
               startTimestamp: auction.startTimestamp,
               endTimestamp: auction.endTimestamp,
               auctionCreator: auction.auctionCreator,
-              assetContract: auction.assetContract,
+              assetContract: auction.assetContract.toLowerCase(),
               currency: auction.currency,
               tokenType: auction.tokenType,
               status: auction.status,
               winningBid: winningBidBody,
               isAuctionExpired: true,
+              nft: nft,
             })
           );
         }
@@ -113,10 +129,13 @@ export async function processAllAuctions(
   };
 }
 
-export async function handleBidInAuction(
-  ctx: DataHandlerContext<Store, any>,
-  log: any
-) {
+export async function handleBidInAuction({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}) {
   const { auctionId, bidAmount } = marketplaceAbi.events.NewBid.decode(log);
 
   const auction = await ctx.store.findOne(AllAuction, {
@@ -149,10 +168,13 @@ export async function handleBidInAuction(
   }
 }
 
-export async function handleCollectAuctionPayout(
-  ctx: DataHandlerContext<Store, any>,
-  log: any
-) {
+export async function handleCollectAuctionPayout({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}) {
   const { auctionId } = marketplaceAbi.events.AuctionClosed.decode(log);
   const auctionToRemove = await ctx.store.findOne(AllAuction, {
     where: { auctionId },

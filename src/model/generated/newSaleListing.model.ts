@@ -1,4 +1,5 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, Index as Index_, BigIntColumn as BigIntColumn_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, Index as Index_, BigIntColumn as BigIntColumn_, ManyToOne as ManyToOne_} from "@subsquid/typeorm-store"
+import {NFT} from "./nft.model"
 
 @Entity_()
 export class NewSaleListing {
@@ -35,4 +36,8 @@ export class NewSaleListing {
 
     @StringColumn_({nullable: false})
     transactionHash!: string
+
+    @Index_()
+    @ManyToOne_(() => NFT, {nullable: true})
+    nft!: NFT | undefined | null
 }

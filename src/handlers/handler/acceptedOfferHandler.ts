@@ -1,11 +1,15 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { ContextType, LogType } from "../../main";
-import { AcceptedOffers, AllOffers, NewOffer } from "../../model";
+import { AcceptedOffers, AllOffers, NewOffer, NFT } from "../../model";
+import { saveNFT } from "../../utils/blockchain";
 
-export async function handleAcceptedOffer(
-  ctx: ContextType,
-  log: LogType
-): Promise<AcceptedOffers> {
+export async function handleAcceptedOffer({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}): Promise<AcceptedOffers> {
   let {
     offerId,
     assetContract,
@@ -36,14 +40,28 @@ export async function handleAcceptedOffer(
     }
   }
 
+  await saveNFT({
+    contractAddress: assetContract,
+    tokenId: tokenId,
+    ctx: ctx,
+  });
+
+  const nft = await ctx.store.findOne(NFT, {
+    where: {
+      tokenId: tokenId,
+      assetContract: assetContract.toLowerCase(),
+    },
+  });
+
   return new AcceptedOffers({
     id: log.id,
     offeror: offeror,
     offerId: offerId,
-    assetContract: assetContract,
+    assetContract: assetContract.toLowerCase(),
     quantityBought: quantityBought,
     seller: seller,
     tokenId: tokenId,
     totalPricePaid: totalPricePaid,
+    nft: nft,
   });
 }

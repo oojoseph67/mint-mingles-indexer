@@ -1,6 +1,7 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, BigIntColumn as BigIntColumn_, StringColumn as StringColumn_, IntColumn as IntColumn_, BooleanColumn as BooleanColumn_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, BigIntColumn as BigIntColumn_, StringColumn as StringColumn_, IntColumn as IntColumn_, BooleanColumn as BooleanColumn_, ManyToOne as ManyToOne_, Index as Index_} from "@subsquid/typeorm-store"
 import * as marshal from "./marshal"
 import {WinningBid} from "./_winningBid"
+import {NFT} from "./nft.model"
 
 @Entity_()
 export class AllAuction {
@@ -58,4 +59,8 @@ export class AllAuction {
 
     @IntColumn_({nullable: false})
     status!: number
+
+    @Index_()
+    @ManyToOne_(() => NFT, {nullable: true})
+    nft!: NFT | undefined | null
 }

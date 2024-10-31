@@ -1,11 +1,15 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { ContextType, LogType } from "../../main";
-import { AllListing, NewListing, NewSaleListing } from "../../model";
+import { AllListing, NewListing, NewSaleListing, NFT } from "../../model";
+import { saveNFT } from "../../utils/blockchain";
 
-export async function handleNewSale(
-  ctx: ContextType,
-  log: LogType
-): Promise<NewSaleListing> {
+export async function handleNewSale({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}): Promise<NewSaleListing> {
   console.log("Inside new sale if statement");
 
   let {
@@ -39,15 +43,29 @@ export async function handleNewSale(
     }
   }
 
+  await saveNFT({
+    contractAddress: assetContract,
+    tokenId: tokenId,
+    ctx: ctx,
+  });
+
+  const nft = await ctx.store.findOne(NFT, {
+    where: {
+      tokenId: tokenId,
+      assetContract: assetContract.toLowerCase(),
+    },
+  });
+
   return new NewSaleListing({
     id: log.id,
     listingCreator: listingCreator,
     listingId: listingId,
-    assetContract: assetContract,
+    assetContract: assetContract.toLowerCase(),
     tokenId: tokenId,
     quantityBought: quantityBought,
     totalPricePaid: totalPricePaid,
     buyer: buyer,
     transactionHash: log.transactionHash,
+    nft: nft,
   });
 }

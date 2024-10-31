@@ -1,9 +1,4 @@
-import {
-  AllAuction,
-  AllOffers,
-  CompletedAuction,
-  CompletedOffers,
-} from "../../model";
+import { AllOffers, CompletedOffers, NFT } from "../../model";
 import { v4 as uuidv4 } from "uuid";
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 import {
@@ -11,6 +6,7 @@ import {
   ContextType,
   MARKETPLACE_CONTRACT_ADDRESS,
 } from "../../main";
+import { saveNFT } from "../../utils/blockchain";
 
 export async function processAllOffers(
   ctx: ContextType,
@@ -44,48 +40,58 @@ export async function processAllOffers(
     console.log(`Fetching offers from ${startIndex} to ${endIndex}`);
 
     for (const offer of newOffers) {
-      if (
-        offer.status === 1 &&
-        !processedOfferIds.has(offer.offerId.toString())
-      ) {
-        newAllOffers.push(
-          new AllOffers({
-            id: uuidv4(),
-            offerId: offer.offerId,
-            tokenId: offer.tokenId,
-            quantity: offer.quantity,
-            totalPrice: offer.totalPrice,
-            expirationTimestamp: offer.expirationTimestamp,
-            offeror: offer.offeror,
-            assetContract: offer.assetContract,
-            currency: offer.currency,
-            tokenType: offer.tokenType,
-            status: offer.status,
-          })
-        );
-        processedOfferIds.add(offer.offerId.toString());
-      }
+      if (!processedOfferIds.has(offer.offerId.toString())) {
+        if (offer.status === 1) {
+          const nft = await ctx.store.findOne(NFT, {
+            where: {
+              tokenId: offer.tokenId,
+              assetContract: offer.assetContract.toLowerCase(),
+            },
+          });
 
-      if (
-        offer.status === 2 &&
-        !processedOfferIds.has(offer.offerId.toString())
-      ) {
-        newCompletedOffers.push(
-          new CompletedOffers({
-            id: uuidv4(),
-            offerId: offer.offerId,
-            tokenId: offer.tokenId,
-            quantity: offer.quantity,
-            totalPrice: offer.totalPrice,
-            expirationTimestamp: offer.expirationTimestamp,
-            offeror: offer.offeror,
-            assetContract: offer.assetContract,
-            currency: offer.currency,
-            tokenType: offer.tokenType,
-            status: offer.status,
-          })
-        );
-        processedOfferIds.add(offer.offerId.toString());
+          newAllOffers.push(
+            new AllOffers({
+              id: uuidv4(),
+              offerId: offer.offerId,
+              tokenId: offer.tokenId,
+              quantity: offer.quantity,
+              totalPrice: offer.totalPrice,
+              expirationTimestamp: offer.expirationTimestamp,
+              offeror: offer.offeror,
+              assetContract: offer.assetContract.toLowerCase(),
+              currency: offer.currency,
+              tokenType: offer.tokenType,
+              status: offer.status,
+              nft: nft,
+            })
+          );
+          processedOfferIds.add(offer.offerId.toString());
+        } else if (offer.status === 2) {
+          const nft = await ctx.store.findOne(NFT, {
+            where: {
+              tokenId: offer.tokenId,
+              assetContract: offer.assetContract.toLowerCase(),
+            },
+          });
+
+          newCompletedOffers.push(
+            new CompletedOffers({
+              id: uuidv4(),
+              offerId: offer.offerId,
+              tokenId: offer.tokenId,
+              quantity: offer.quantity,
+              totalPrice: offer.totalPrice,
+              expirationTimestamp: offer.expirationTimestamp,
+              offeror: offer.offeror,
+              assetContract: offer.assetContract.toLowerCase(),
+              currency: offer.currency,
+              tokenType: offer.tokenType,
+              status: offer.status,
+              nft: nft,
+            })
+          );
+          processedOfferIds.add(offer.offerId.toString());
+        }
       }
     }
   }

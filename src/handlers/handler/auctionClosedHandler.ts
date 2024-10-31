@@ -2,10 +2,13 @@ import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { ContextType, LogType } from "../../main";
 import { AuctionClosed, NewAuction, NewBid } from "../../model";
 
-export async function handleAuctionClosed(
-  ctx: ContextType,
-  log: LogType
-): Promise<AuctionClosed> {
+export async function handleAuctionClosed({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}): Promise<AuctionClosed> {
   console.log("Inside new sale if statement");
 
   let {

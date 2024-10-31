@@ -2,10 +2,13 @@ import * as marketplaceAbi from "../../abi/marketplaceABI";
 import { ContextType, LogType } from "../../main";
 import { AllListing, NewListing } from "../../model";
 
-export async function handleCancelledListing(
-  ctx: ContextType,
-  log: LogType
-): Promise<void> {
+export async function handleCancelledListing({
+  ctx,
+  log,
+}: {
+  ctx: ContextType;
+  log: LogType;
+}): Promise<void> {
   let { listingId } = marketplaceAbi.events.CancelledListing.decode(log);
 
   const listingToRemove = await ctx.store.findOne(NewListing, {
