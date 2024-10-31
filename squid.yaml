@@ -2,9 +2,11 @@ manifestVersion: subsquid.io/v0.1
 
 name: mint-mingles-indexer
 
-version: 1.0
+# version: 1.0
 
 description: Indexer for Mint Mingles NFT Marketplace on CrossFi (Testnet)
+
+slot: v1
 
 build:
 
@@ -14,8 +16,8 @@ deploy:
       config:
         statement_timeout: 100000
         log_min_duration_statement: 100000
-    rpc:
-      - eth.http
+    # rpc:
+    #   - eth.http
   processor:
     cmd:
       - sqd

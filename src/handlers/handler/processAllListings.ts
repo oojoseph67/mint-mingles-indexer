@@ -6,6 +6,7 @@ import {
   MARKETPLACE_CONTRACT_ADDRESS,
 } from "../../main";
 import * as marketplaceAbi from "../../abi/marketplaceABI";
+import { getNFTCustom } from "../../utils/blockchain";
 
 export async function processAllListings(
   ctx: ContextType,
@@ -34,32 +35,44 @@ export async function processAllListings(
   const newAllListings: AllListing[] = [];
   const newCompletedListings: CompletedListing[] = [];
 
+  console.log({ startIndex, endIndex });
+  console.log("LISTINGS");
+
   if (startIndex <= endIndex) {
     const newListings = await contract.getAllListings(startIndex, endIndex);
     console.log(`Fetching listings from ${startIndex} to ${endIndex}`);
 
     for (const listing of newListings) {
+      const nft = await getNFTCustom({
+        contractAddress: listing.assetContract,
+        tokenId: listing.tokenId,
+      });
+
+      console.log("NFT: for loop", nft);
+
       if (
         listing.status === 1 &&
         !processedListingIds.has(listing.listingId.toString())
       ) {
-        newAllListings.push(
-          new AllListing({
-            id: uuidv4(),
-            listingId: listing.listingId,
-            tokenId: listing.tokenId,
-            quantity: listing.quantity,
-            pricePerToken: listing.pricePerToken,
-            startTimestamp: listing.startTimestamp,
-            endTimestamp: listing.endTimestamp,
-            listingCreator: listing.listingCreator,
-            assetContract: listing.assetContract,
-            currency: listing.currency,
-            tokenType: listing.tokenType,
-            status: listing.status,
-            reserved: listing.reserved,
-          })
-        );
+        console.log("NFT: all listing inside if", { nft });
+
+        const allListing = new AllListing({
+          id: uuidv4(),
+          listingId: listing.listingId,
+          tokenId: listing.tokenId,
+          quantity: listing.quantity,
+          pricePerToken: listing.pricePerToken,
+          startTimestamp: listing.startTimestamp,
+          endTimestamp: listing.endTimestamp,
+          listingCreator: listing.listingCreator,
+          assetContract: listing.assetContract,
+          currency: listing.currency,
+          tokenType: listing.tokenType,
+          status: listing.status,
+          reserved: listing.reserved,
+        });
+
+        newAllListings.push(allListing);
         processedListingIds.add(listing.listingId.toString());
       }
 
@@ -67,23 +80,23 @@ export async function processAllListings(
         listing.status === 2 &&
         !processedListingIds.has(listing.listingId.toString())
       ) {
-        newCompletedListings.push(
-          new CompletedListing({
-            id: uuidv4(),
-            listingId: listing.listingId,
-            tokenId: listing.tokenId,
-            quantity: listing.quantity,
-            pricePerToken: listing.pricePerToken,
-            startTimestamp: listing.startTimestamp,
-            endTimestamp: listing.endTimestamp,
-            listingCreator: listing.listingCreator,
-            assetContract: listing.assetContract,
-            currency: listing.currency,
-            tokenType: listing.tokenType,
-            status: listing.status,
-            reserved: listing.reserved,
-          })
-        );
+        const completedListing = new CompletedListing({
+          id: uuidv4(),
+          listingId: listing.listingId,
+          tokenId: listing.tokenId,
+          quantity: listing.quantity,
+          pricePerToken: listing.pricePerToken,
+          startTimestamp: listing.startTimestamp,
+          endTimestamp: listing.endTimestamp,
+          listingCreator: listing.listingCreator,
+          assetContract: listing.assetContract,
+          currency: listing.currency,
+          tokenType: listing.tokenType,
+          status: listing.status,
+          reserved: listing.reserved,
+        });
+
+        newCompletedListings.push(completedListing);
         processedListingIds.add(listing.listingId.toString());
       }
     }

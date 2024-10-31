@@ -12,7 +12,9 @@
     "@subsquid/typeorm-store": "^1.5.1",
     "@subsquid/util-internal": "^3.2.0",
     "dotenv": "^16.4.5",
+    "eslint": "^9.13.0",
     "pg": "^8.12.0",
+    "thirdweb": "^5.64.5",
     "typeorm": "^0.3.20",
     "uuid": "^10.0.0"
   },
