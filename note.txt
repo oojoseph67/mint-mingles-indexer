@@ -4,6 +4,7 @@ sqd up
 sqd migration:generate
 sqd process
 
+sqd serve
 
 ///
 sqd codegen

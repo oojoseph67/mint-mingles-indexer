@@ -1,11 +1,10 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
+import { ContextType, LogType } from "../../main";
 import { NewListing, AllListing } from "../../model";
-import { DataHandlerContext } from "@subsquid/evm-processor";
-import { Store } from "@subsquid/typeorm-store";
 
 export async function handleUpdatedListing(
-  ctx: DataHandlerContext<Store, any>,
-  log: any
+  ctx: ContextType,
+  log: LogType
 ): Promise<void> {
   let { listingId, assetContract, listing, listingCreator } =
     marketplaceAbi.events.UpdatedListing.decode(log);

@@ -1,12 +1,8 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
+import { LogType } from "../../main";
 import { NewBid } from "../../model";
-import { DataHandlerContext } from "@subsquid/evm-processor";
-import { Store } from "@subsquid/typeorm-store";
 
-export async function handleNewBid(
-  ctx: DataHandlerContext<Store, any>,
-  log: any
-): Promise<NewBid> {
+export async function handleNewBid(log: LogType): Promise<NewBid> {
   let { assetContract, auction, auctionId, bidAmount, bidder } =
     marketplaceAbi.events.NewBid.decode(log);
 

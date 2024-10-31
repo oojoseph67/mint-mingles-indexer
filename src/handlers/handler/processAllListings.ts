@@ -1,13 +1,15 @@
 import { AllListing, CompletedListing } from "../../model";
 import { v4 as uuidv4 } from "uuid";
-import { DataHandlerContext } from "@subsquid/evm-processor";
-import { Store } from "@subsquid/typeorm-store";
-import { MARKETPLACE_CONTRACT_ADDRESS } from "../../main";
+import {
+  BlockType,
+  ContextType,
+  MARKETPLACE_CONTRACT_ADDRESS,
+} from "../../main";
 import * as marketplaceAbi from "../../abi/marketplaceABI";
 
 export async function processAllListings(
-  ctx: DataHandlerContext<Store, any>,
-  blockHeader: any,
+  ctx: ContextType,
+  blockHeader: BlockType,
   processedListingIds: Set<string>
 ) {
   const contract = new marketplaceAbi.Contract(

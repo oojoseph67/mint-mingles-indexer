@@ -1,7 +1,8 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
+import { LogType } from "../../main";
 import { NewListing } from "../../model";
 
-export async function handleNewListing(log: any): Promise<NewListing> {
+export async function handleNewListing(log: LogType): Promise<NewListing> {
   let { assetContract, listing, listingCreator, listingId } =
     marketplaceAbi.events.NewListing.decode(log);
 

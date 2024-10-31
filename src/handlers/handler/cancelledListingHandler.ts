@@ -1,11 +1,10 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
+import { ContextType, LogType } from "../../main";
 import { AllListing, NewListing } from "../../model";
-import { DataHandlerContext } from "@subsquid/evm-processor";
-import { Store } from "@subsquid/typeorm-store";
 
 export async function handleCancelledListing(
-  ctx: DataHandlerContext<Store, any>,
-  log: any
+  ctx: ContextType,
+  log: LogType
 ): Promise<void> {
   let { listingId } = marketplaceAbi.events.CancelledListing.decode(log);
 

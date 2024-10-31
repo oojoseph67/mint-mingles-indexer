@@ -1,4 +1,12 @@
-import { EvmBatchProcessor } from "@subsquid/evm-processor";
+import {
+  BlockHeader,
+  DataHandlerContext,
+  EvmBatchProcessor,
+  EvmBatchProcessorFields,
+  Log as _Log,
+  Transaction as _Transaction,
+} from "@subsquid/evm-processor";
+import { Store } from "@subsquid/typeorm-store";
 import { TypeormDatabase } from "@subsquid/typeorm-store";
 import * as marketplaceAbi from "./abi/marketplaceABI";
 import {
@@ -41,9 +49,9 @@ export const MARKETPLACE_CONTRACT_ADDRESS =
 const contractFirstBlock = 4925931;
 const defaultBlock = 5753792;
 
-const processor = new EvmBatchProcessor()
+export const processor = new EvmBatchProcessor()
   .setGateway("https://v2.archive.subsquid.io/network/crossfi-testnet")
-  .setRpcEndpoint("https://rpc.xfi.ms/archive/4157")
+  .setRpcEndpoint(process.env.PUBLIC_RPC_URL)
   // .setRpcEndpoint(
   //   process.env.ALCHEMY_RPC_URL
   // )
@@ -147,7 +155,7 @@ processor.run(db, async (ctx) => {
             await handleCollectAuctionPayout(ctx, log);
             break;
           case marketplaceAbi.events.NewOffer.topic.toLowerCase():
-            newOffers.push(await handleNewOffer(ctx, log));
+            newOffers.push(await handleNewOffer(log));
             break;
           case marketplaceAbi.events.CancelledOffer.topic.toLowerCase():
             await handleCancelledOffer(ctx, log);
@@ -156,7 +164,7 @@ processor.run(db, async (ctx) => {
             acceptedOffers.push(await handleAcceptedOffer(ctx, log));
             break;
           case marketplaceAbi.events.NewBid.topic.toLowerCase():
-            newBids.push(await handleNewBid(ctx, log));
+            newBids.push(await handleNewBid(log));
             await handleBidInAuction(ctx, log);
             break;
         }
@@ -227,3 +235,9 @@ processor.run(db, async (ctx) => {
     await ctx.store.insert(completedOffers);
   }
 });
+
+export type Fields = EvmBatchProcessorFields<typeof processor>;
+export type ContextType = DataHandlerContext<Store, Fields>;
+export type BlockType = BlockHeader<Fields>;
+export type LogType = _Log<Fields>;
+export type TransactionType = _Transaction<Fields>;

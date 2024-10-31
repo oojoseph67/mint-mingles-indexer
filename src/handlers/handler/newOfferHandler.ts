@@ -1,20 +1,12 @@
 import * as marketplaceAbi from "../../abi/marketplaceABI";
+import { LogType } from "../../main";
 import { NewOffer } from "../../model";
-import { DataHandlerContext } from "@subsquid/evm-processor";
-import { Store } from "@subsquid/typeorm-store";
 
-export async function handleNewOffer(
-  ctx: DataHandlerContext<Store, any>,
-  log: any
-): Promise<NewOffer> {
+export async function handleNewOffer(log: LogType): Promise<NewOffer> {
   console.log("Inside new offer if statement");
 
-  let {
-    offeror,
-    offerId,
-    assetContract,
-    offer,
-  } = marketplaceAbi.events.NewOffer.decode(log);
+  let { offeror, offerId, assetContract, offer } =
+    marketplaceAbi.events.NewOffer.decode(log);
 
   // this is to remove the listing from the new-listing database after it has been sold
   // const listingToRemove = await ctx.store.findOne(NewOffer, {
