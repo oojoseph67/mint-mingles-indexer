@@ -1,11 +1,19 @@
 manifestVersion: subsquid.io/v0.1
+
 name: mint-mingles-indexer
-version: 1
-description: The very first evm squid from manifest
-build: 
+
+version: 1.0
+
+description: Indexer for Mint Mingles NFT Marketplace on CrossFi (Testnet)
+
+build:
+
 deploy:
   addons:
-    postgres: 
+    postgres:
+      config:
+        statement_timeout: 100000
+        log_min_duration_statement: 100000
     rpc:
       - eth.http
   processor:
@@ -16,3 +24,12 @@ deploy:
     cmd:
       - sqd
       - serve:prod
+scale:
+  dedicated: true
+  addons:
+    postgres:
+      storage: 1G
+      profile: medium
+  api:
+    profile: medium
+    replicas: 1

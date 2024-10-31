@@ -5,6 +5,7 @@ import {
   EvmBatchProcessorFields,
   Log as _Log,
   Transaction as _Transaction,
+  assertNotNull,
 } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
 import { TypeormDatabase } from "@subsquid/typeorm-store";
@@ -47,14 +48,11 @@ export const MARKETPLACE_CONTRACT_ADDRESS =
   "0x7Ed11a18630a9E569882Ca2F4D3488A88eF45d28";
 
 const contractFirstBlock = 4925931;
-const defaultBlock = 5753792;
+const defaultBlock = 5833437;
 
 export const processor = new EvmBatchProcessor()
   .setGateway("https://v2.archive.subsquid.io/network/crossfi-testnet")
-  .setRpcEndpoint(process.env.PUBLIC_RPC_URL)
-  // .setRpcEndpoint(
-  //   process.env.ALCHEMY_RPC_URL
-  // )
+  .setRpcEndpoint(assertNotNull(process.env.PUBLIC_RPC_URL))
   .setFinalityConfirmation(75)
   .addLog({
     range: { from: defaultBlock },
